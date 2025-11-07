@@ -1,0 +1,162 @@
+Goal:
+Build a complete full-stack project named “DigiHealth-Record-System” using the following exact structure and specifications.
+
+🧩 Tech Stack
+
+Frontend: React.js + Vite
+
+Backend: Node.js + Express.js
+
+Database: MongoDB (Mongoose ORM)
+
+Authentication: JWT (JSON Web Token)
+
+UI Framework: Tailwind CSS (for a modern, responsive look)
+
+📁 PROJECT STRUCTURE
+DigiHealth-Record-System/
+├── frontend/
+│   └── src/
+│       ├── app/
+│       │   ├── routes.jsx
+│       │   └── ProtectedRoute.jsx
+│       │
+│       ├── components/
+│       │   ├── SearchBar.jsx
+│       │   ├── PatientSummaryCard.jsx
+│       │   ├── PrescriptionList.jsx
+│       │   ├── RecordFilter.jsx
+│       │   ├── DownloadButton.jsx
+│       │   └── ShareConsentModal.jsx
+│       │
+│       ├── pages/
+│       │   ├── Auth/
+│       │   │   ├── Login.jsx
+│       │   │   └── Register.jsx
+│       │   │
+│       │   ├── Patient/
+│       │   │   ├── PatientDashboard.jsx
+│       │   │   ├── MyPrescriptions.jsx
+│       │   │   ├── MyReports.jsx
+│       │   │   ├── MyProfile.jsx
+│       │   │   ├── MyConsents.jsx
+│       │   │   └── MyDownloads.jsx
+│       │   │
+│       │   ├── Doctor/
+│       │   │   ├── DoctorDashboard.jsx
+│       │   │   └── PrescriptionForm.jsx
+│       │   │
+│       │   └── Pharmacy/
+│       │       ├── PharmacyDashboard.jsx
+│       │       └── PrescriptionVerify.jsx
+│       │
+│       ├── context/
+│       │   └── AuthContext.js
+│       │
+│       ├── utils/
+│       │   ├── api.js
+│       │   └── download.js
+│       │
+│       ├── App.jsx
+│       └── main.jsx
+│
+├── backend/
+│   └── src/
+│       ├── config/
+│       │   └── db.js
+│       │
+│       ├── models/
+│       │   ├── Patient.js
+│       │   ├── Doctor.js
+│       │   ├── Pharmacy.js
+│       │   ├── Prescription.js
+│       │   ├── Report.js
+│       │   └── Consent.js
+│       │
+│       ├── controllers/
+│       │   ├── authController.js
+│       │   ├── patientController.js
+│       │   ├── selfController.js
+│       │   ├── prescriptionController.js
+│       │   ├── reportController.js
+│       │   └── consentController.js
+│       │
+│       ├── middleware/
+│       │   ├── authMiddleware.js
+│       │   ├── validateParam.js
+│       │   └── consentGuard.js
+│       │
+│       ├── routes/
+│       │   ├── authRoutes.js
+│       │   ├── patientRoutes.js
+│       │   ├── selfRoutes.js
+│       │   ├── prescriptionRoutes.js
+│       │   ├── reportRoutes.js
+│       │   └── consentRoutes.js
+│       │
+│       └── server.js
+│
+└── ai-service/ (optional)
+
+⚙️ Functionality Overview
+
+1. Roles & Authentication
+
+Three roles: patient, doctor, pharmacy
+
+JWT-based login and protected routes
+
+AuthContext.js manages token and role globally
+
+2. Patient Dashboard (No Search Box)
+
+Displays own data fetched via /api/me/*
+
+Tabs:
+
+My Prescriptions
+
+My Reports
+
+My Profile
+
+My Consents
+
+My Downloads (PDF/JSON export)
+
+3. Doctor Dashboard
+
+Has SearchBar for patient lookup by patientId
+
+Fetches:
+
+/api/patients/:patientId (demographics)
+
+/api/prescriptions?patientId=...
+
+Can issue new prescriptions
+
+4. Pharmacy Dashboard
+
+Has SearchBar for patientId
+
+Fetches prescriptions to verify & mark as dispensed
+
+5. Consent System
+
+Patient grants temporary access via ShareConsentModal
+
+Backend enforces access using consentGuard.js
+
+🧠 Backend API Summary
+Method	Endpoint	Role	Description
+POST	/api/auth/login	All	JWT login
+GET	/api/me/profile	Patient	View own profile
+GET	/api/me/prescriptions	Patient	View own prescriptions
+GET	/api/me/reports	Patient	View own reports
+GET	/api/patients/:patientId	Doctor/Pharmacy	Fetch patient demographics
+GET	/api/prescriptions?patientId=...	Doctor/Pharmacy	Fetch prescriptions by patient
+POST	/api/prescriptions	Doctor	Create new prescription
+PATCH	/api/prescriptions/:rxId/dispense	Pharmacy	Mark prescription as dispensed
+POST	/api/consents	Patient	Create consent for doctor/pharmacy
+PATCH	/api/consents/:id/revoke	Patient	Revoke consent
