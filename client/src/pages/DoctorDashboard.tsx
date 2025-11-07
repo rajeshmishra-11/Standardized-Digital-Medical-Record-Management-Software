@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchBar from "@/components/SearchBar";
 import PatientSummaryCard from "@/components/PatientSummaryCard";
 import PrescriptionList, { type Prescription } from "@/components/PrescriptionList";
 import PrescriptionForm from "@/components/PrescriptionForm";
-import { Shield, LogOut, Plus } from "lucide-react";
+import ReportCard, { type MedicalReport } from "@/components/ReportCard";
+import { Shield, LogOut, Plus, Pill, FileText } from "lucide-react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DoctorDashboard() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [searchedPatientId, setSearchedPatientId] = useState("");
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
 
@@ -42,10 +46,79 @@ export default function DoctorDashboard() {
       prescribedDate: "2024-01-20",
       instructions: "Take in the morning. Monitor blood pressure regularly.",
       status: "pending"
+    },
+    {
+      id: "RX-003",
+      medicationName: "Metformin",
+      dosage: "850mg",
+      frequency: "Twice daily",
+      prescribedBy: "Johnson",
+      prescribedDate: "2023-12-10",
+      instructions: "Take with meals to reduce stomach upset.",
+      status: "dispensed"
+    }
+  ];
+
+  const mockMedicalReports: MedicalReport[] = [
+    {
+      id: "R-001",
+      type: "Blood Test - Complete Panel",
+      date: "2024-01-18",
+      status: "complete",
+      performedBy: "Lab Corp",
+      notes: "All values within normal range. Cholesterol slightly elevated (210 mg/dL)."
+    },
+    {
+      id: "R-002",
+      type: "Chest X-Ray",
+      date: "2024-01-12",
+      status: "reviewed",
+      performedBy: "Radiology Center",
+      notes: "No abnormalities detected. Lungs clear, heart size normal."
+    },
+    {
+      id: "R-003",
+      type: "MRI Scan - Lower Back",
+      date: "2023-12-28",
+      status: "complete",
+      performedBy: "Imaging Associates",
+      notes: "Mild disc bulge at L4-L5. No significant nerve compression."
+    },
+    {
+      id: "R-004",
+      type: "ECG (Electrocardiogram)",
+      date: "2023-12-15",
+      status: "complete",
+      performedBy: "Cardiology Dept",
+      notes: "Normal sinus rhythm. No arrhythmias detected."
+    },
+    {
+      id: "R-005",
+      type: "Urinalysis",
+      date: "2023-11-22",
+      status: "complete",
+      performedBy: "Lab Corp",
+      notes: "Normal findings. No signs of infection or abnormalities."
     }
   ];
 
   const hasSearched = searchedPatientId.length > 0;
+
+  const handleViewReport = (reportId: string) => {
+    console.log('Viewing report:', reportId);
+    toast({
+      title: "Report Viewer",
+      description: `Opening medical report ${reportId}...`,
+    });
+  };
+
+  const handleDownloadReport = (reportId: string) => {
+    console.log('Downloading report:', reportId);
+    toast({
+      title: "Download Started",
+      description: `Downloading report ${reportId} as PDF...`,
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,10 +189,42 @@ export default function DoctorDashboard() {
           <div className="space-y-6">
             <PatientSummaryCard {...mockPatient} />
             
-            <div>
-              <h2 className="text-2xl font-semibold mb-4">Patient Prescriptions</h2>
-              <PrescriptionList prescriptions={mockPrescriptions} />
-            </div>
+            <Tabs defaultValue="prescriptions" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 max-w-md">
+                <TabsTrigger value="prescriptions" data-testid="tab-prescriptions">
+                  <Pill className="h-4 w-4 mr-2" />
+                  Prescriptions ({mockPrescriptions.length})
+                </TabsTrigger>
+                <TabsTrigger value="reports" data-testid="tab-reports">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Medical Reports ({mockMedicalReports.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="prescriptions" className="space-y-4">
+                <h2 className="text-2xl font-semibold">Prescription History</h2>
+                <PrescriptionList prescriptions={mockPrescriptions} />
+              </TabsContent>
+
+              <TabsContent value="reports" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-semibold">Medical Reports & Health Records</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {mockMedicalReports.length} reports available
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  {mockMedicalReports.map((report) => (
+                    <ReportCard
+                      key={report.id}
+                      report={report}
+                      onView={handleViewReport}
+                      onDownload={handleDownloadReport}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         ) : (
           <div className="text-center py-20">
