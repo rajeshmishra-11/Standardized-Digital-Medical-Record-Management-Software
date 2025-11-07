@@ -45,12 +45,20 @@ export default function PharmacyDashboard() {
     }
   ]);
 
-  const mockPatient = {
-    patientId: "PAT-2024-001",
+  // Use the searched patient ID to display patient data
+  const mockPatient = searchedPatientId ? {
+    patientId: searchedPatientId,
     name: "Sarah Johnson",
     dateOfBirth: "1985-03-15",
     phone: "+1 (555) 123-4567",
     email: "sarah.johnson@email.com",
+    status: "active" as const
+  } : {
+    patientId: "",
+    name: "",
+    dateOfBirth: "",
+    phone: "",
+    email: "",
     status: "active" as const
   };
 
