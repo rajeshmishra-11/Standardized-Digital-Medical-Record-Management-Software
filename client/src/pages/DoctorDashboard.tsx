@@ -2,40 +2,35 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import SearchBar from "@/components/SearchBar";
 import PatientSummaryCard from "@/components/PatientSummaryCard";
 import PrescriptionList, { type Prescription } from "@/components/PrescriptionList";
 import PrescriptionForm from "@/components/PrescriptionForm";
 import ReportCard, { type MedicalReport } from "@/components/ReportCard";
 import ReportDetailModal from "@/components/ReportDetailModal";
-import { Shield, LogOut, Plus, Pill, FileText } from "lucide-react";
+import { Shield, LogOut, Plus, Pill, FileText, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+
+interface PatientData {
+  patientId: string;
+  name: string;
+  dateOfBirth: string;
+  phone: string;
+  email: string;
+  status: "active" | "inactive";
+}
 
 export default function DoctorDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [searchedPatientId, setSearchedPatientId] = useState("");
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [searchError, setSearchError] = useState<string>("");
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
   const [selectedReport, setSelectedReport] = useState<MedicalReport | null>(null);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-
-  // Use the searched patient ID to display patient data
-  const mockPatient = searchedPatientId ? {
-    patientId: searchedPatientId,
-    name: "Sarah Johnson",
-    dateOfBirth: "1985-03-15",
-    phone: "+1 (555) 123-4567",
-    email: "sarah.johnson@email.com",
-    status: "active" as const
-  } : {
-    patientId: "",
-    name: "",
-    dateOfBirth: "",
-    phone: "",
-    email: "",
-    status: "active" as const
-  };
 
   const mockPrescriptions: Prescription[] = [
     {
@@ -114,6 +109,44 @@ export default function DoctorDashboard() {
   ];
 
   const hasSearched = searchedPatientId.length > 0;
+  const patientFound = patientData !== null && !searchError;
+
+  const handlePatientSearch = async (patientId: string) => {
+    setSearchedPatientId(patientId);
+    setSearchError("");
+    setPatientData(null);
+
+    if (!patientId.trim()) {
+      return;
+    }
+
+    // Validate patient ID format: PT-IND-\d{8}
+    const patientIdRegex = /^PT-IND-\d{8}$/;
+    if (!patientIdRegex.test(patientId)) {
+      setSearchError("No result found");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/patients/${patientId}`);
+      
+      if (response.status === 404) {
+        setSearchError("No result found");
+        return;
+      }
+
+      if (!response.ok) {
+        setSearchError("No result found");
+        return;
+      }
+
+      const data = await response.json();
+      setPatientData(data);
+    } catch (error) {
+      console.error("Error searching patient:", error);
+      setSearchError("No result found");
+    }
+  };
 
   const handleViewReport = (reportId: string) => {
     const report = mockMedicalReports.find(r => r.id === reportId);
@@ -168,11 +201,17 @@ export default function DoctorDashboard() {
 
       <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="flex-1 max-w-2xl">
+          <div className="flex-1 max-w-2xl space-y-4">
             <SearchBar
-              placeholder="Search by Patient ID..."
-              onSearch={setSearchedPatientId}
+              placeholder="Search by Patient ID (e.g., PT-IND-12345678)..."
+              onSearch={handlePatientSearch}
             />
+            {searchError && hasSearched && (
+              <Alert variant="destructive" data-testid="alert-no-result">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{searchError}</AlertDescription>
+              </Alert>
+            )}
           </div>
           <Button
             onClick={() => setShowPrescriptionForm(!showPrescriptionForm)}
@@ -196,9 +235,9 @@ export default function DoctorDashboard() {
           </div>
         )}
 
-        {hasSearched ? (
+        {patientFound && patientData ? (
           <div className="space-y-6">
-            <PatientSummaryCard {...mockPatient} />
+            <PatientSummaryCard {...patientData} />
             
             <Tabs defaultValue="prescriptions" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 max-w-md">
@@ -237,15 +276,15 @@ export default function DoctorDashboard() {
               </TabsContent>
             </Tabs>
           </div>
-        ) : (
+        ) : !hasSearched ? (
           <div className="text-center py-20">
             <Shield className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Search for a Patient</h2>
             <p className="text-muted-foreground">
-              Enter a Patient ID to view their records and manage prescriptions
+              Enter a Patient ID (format: PT-IND-XXXXXXXX) to view records and manage prescriptions
             </p>
           </div>
-        )}
+        ) : null}
       </main>
 
       <ReportDetailModal
