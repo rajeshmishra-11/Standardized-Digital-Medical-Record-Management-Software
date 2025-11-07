@@ -7,6 +7,7 @@ import PatientSummaryCard from "@/components/PatientSummaryCard";
 import PrescriptionList, { type Prescription } from "@/components/PrescriptionList";
 import PrescriptionForm from "@/components/PrescriptionForm";
 import ReportCard, { type MedicalReport } from "@/components/ReportCard";
+import ReportDetailModal from "@/components/ReportDetailModal";
 import { Shield, LogOut, Plus, Pill, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +17,8 @@ export default function DoctorDashboard() {
   const { toast } = useToast();
   const [searchedPatientId, setSearchedPatientId] = useState("");
   const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<MedicalReport | null>(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const mockPatient = {
     patientId: "PAT-2024-001",
@@ -105,11 +108,11 @@ export default function DoctorDashboard() {
   const hasSearched = searchedPatientId.length > 0;
 
   const handleViewReport = (reportId: string) => {
-    console.log('Viewing report:', reportId);
-    toast({
-      title: "Report Viewer",
-      description: `Opening medical report ${reportId}...`,
-    });
+    const report = mockMedicalReports.find(r => r.id === reportId);
+    if (report) {
+      setSelectedReport(report);
+      setIsReportModalOpen(true);
+    }
   };
 
   const handleDownloadReport = (reportId: string) => {
@@ -236,6 +239,13 @@ export default function DoctorDashboard() {
           </div>
         )}
       </main>
+
+      <ReportDetailModal
+        report={selectedReport}
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onDownload={handleDownloadReport}
+      />
     </div>
   );
 }

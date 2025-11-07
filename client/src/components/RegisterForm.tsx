@@ -12,6 +12,8 @@ interface RegisterFormProps {
     email: string;
     password: string;
     role: "patient" | "doctor" | "pharmacy";
+    hospitalId?: string;
+    facilityId?: string;
   }) => void;
   onSwitchToLogin?: () => void;
 }
@@ -22,6 +24,8 @@ export default function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFo
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<"patient" | "doctor" | "pharmacy">("patient");
+  const [hospitalId, setHospitalId] = useState("");
+  const [facilityId, setFacilityId] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +33,15 @@ export default function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFo
       console.error('Passwords do not match');
       return;
     }
-    console.log('Register attempt:', { fullName, email, role });
-    onRegister?.({ fullName, email, password, role });
+    console.log('Register attempt:', { fullName, email, role, hospitalId, facilityId });
+    onRegister?.({ 
+      fullName, 
+      email, 
+      password, 
+      role,
+      hospitalId: role === 'doctor' ? hospitalId : undefined,
+      facilityId: role === 'pharmacy' ? facilityId : undefined
+    });
   };
 
   return (
@@ -78,6 +89,42 @@ export default function RegisterForm({ onRegister, onSwitchToLogin }: RegisterFo
               data-testid="input-email"
             />
           </div>
+
+          {role === "doctor" && (
+            <div className="space-y-2">
+              <Label htmlFor="hospitalId">Hospital ID / Medical License</Label>
+              <Input
+                id="hospitalId"
+                type="text"
+                placeholder="e.g., HOSP-12345 or MED-LIC-67890"
+                value={hospitalId}
+                onChange={(e) => setHospitalId(e.target.value)}
+                required
+                data-testid="input-hospital-id"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your hospital identification number or medical license number
+              </p>
+            </div>
+          )}
+
+          {role === "pharmacy" && (
+            <div className="space-y-2">
+              <Label htmlFor="facilityId">Pharmacy License / Facility ID</Label>
+              <Input
+                id="facilityId"
+                type="text"
+                placeholder="e.g., PH-67890 or FAC-12345"
+                value={facilityId}
+                onChange={(e) => setFacilityId(e.target.value)}
+                required
+                data-testid="input-facility-id"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter your pharmacy license or facility identification number
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
